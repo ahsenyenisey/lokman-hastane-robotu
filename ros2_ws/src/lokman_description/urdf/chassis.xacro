@@ -1,0 +1,217 @@
+<?xml version="1.0"?>
+<!--
+  LOKMAN gövdesi: şasi + yarım daire burun + çekmeceli kabin + tekerlekler + caster'lar.
+
+  KOORDİNAT SİSTEMİ (ROS standardı REP-103):
+    x → ileri (burun yönü), y → sol, z → yukarı.
+  base_footprint : Yerdeki izdüşüm noktası (z = 0, zemin)
+  base_link      : Tahrik aksının ortası (yerden 0.08 m yukarıda = teker yarıçapı).
+                   Robot yerinde dönerken bu nokta etrafında döner.
+  Aşağıdaki bütün z değerleri base_link'e göredir; yerden yükseklik = z + 0.08.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ===== Ölçüler (gerekçeler: docs/tasarim.md, bölüm 3) ===== -->
+  <xacro:property name="teker_r"        value="0.08"/>  <!-- tekerlek yarıçapı -->
+  <xacro:property name="teker_w"        value="0.04"/>  <!-- tekerlek genişliği -->
+  <xacro:property name="teker_aralik"   value="0.36"/>  <!-- iki teker merkezi arası -->
+  <xacro:property name="govde_w"        value="0.44"/>  <!-- gövde genişliği -->
+  <xacro:property name="kasa_l"         value="0.40"/>  <!-- dikdörtgen kasa uzunluğu -->
+  <xacro:property name="kasa_arka_x"    value="-0.25"/> <!-- kasanın arka yüzü -->
+  <xacro:property name="sasi_alt_z"     value="-0.04"/> <!-- yerden 0.04 m açıklık -->
+  <xacro:property name="sasi_h"         value="0.26"/>  <!-- şasi yüksekliği -->
+  <xacro:property name="caster_r"       value="0.04"/>
+  <xacro:property name="kabin_l"        value="0.33"/>
+  <xacro:property name="kabin_w"        value="0.42"/>
+  <xacro:property name="kabin_h"        value="0.60"/>
+
+  <!-- Türetilen değerler -->
+  <xacro:property name="burun_r"   value="${govde_w/2}"/>                 <!-- 0.22 -->
+  <xacro:property name="burun_x"   value="${kasa_arka_x + kasa_l}"/>      <!-- 0.15: burun merkezi -->
+  <xacro:property name="sasi_z"    value="${sasi_alt_z + sasi_h/2}"/>     <!-- şasi merkez yüksekliği -->
+  <xacro:property name="sasi_ust"  value="${sasi_alt_z + sasi_h}"/>       <!-- 0.22 -->
+  <xacro:property name="kabin_x"   value="${kasa_arka_x + kabin_l/2}"/>
+
+  <!-- ===== base_footprint → base_link ===== -->
+  <link name="base_footprint"/>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 ${teker_r}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ===== Şasi: dikdörtgen kasa + yarım daire burun =====
+       URDF'te yuvarlatılmış şekil yok; burnu bir silindirle elde ediyoruz.
+       Silindirin arka yarısı kasanın içinde kaldığı için dışarıdan
+       "önü yuvarlak bir gövde" gibi görünür. -->
+  <link name="base_link">
+    <!-- Ana kasa -->
+    <visual>
+      <origin xyz="${kasa_arka_x + kasa_l/2} 0 ${sasi_z}"/>
+      <geometry><box size="${kasa_l} ${govde_w} ${sasi_h}"/></geometry>
+      <material name="hastane_beyazi"/>
+    </visual>
+    <collision>
+      <origin xyz="${kasa_arka_x + kasa_l/2} 0 ${sasi_z}"/>
+      <geometry><box size="${kasa_l} ${govde_w} ${sasi_h}"/></geometry>
+    </collision>
+
+    <!-- Yarım daire burun -->
+    <visual>
+      <origin xyz="${burun_x} 0 ${sasi_z}"/>
+      <geometry><cylinder radius="${burun_r}" length="${sasi_h}"/></geometry>
+      <material name="hastane_beyazi"/>
+    </visual>
+    <collision>
+      <origin xyz="${burun_x} 0 ${sasi_z}"/>
+      <geometry><cylinder radius="${burun_r}" length="${sasi_h}"/></geometry>
+    </collision>
+
+    <!-- Turkuaz şerit: gövdeyi çevreleyen ince bant (sadece görsel) -->
+    <visual>
+      <origin xyz="${kasa_arka_x + kasa_l/2} 0 0.12"/>
+      <geometry><box size="${kasa_l + 0.004} ${govde_w + 0.004} 0.035"/></geometry>
+      <material name="turkuaz"/>
+    </visual>
+    <visual>
+      <origin xyz="${burun_x} 0 0.12"/>
+      <geometry><cylinder radius="${burun_r + 0.002}" length="0.035"/></geometry>
+      <material name="turkuaz"/>
+    </visual>
+
+    <!-- Kütle: bataryalar tabanda → 18 kg, ağırlık merkezi alçakta -->
+    <xacro:kutu_inertia m="18.0" x="${kasa_l + burun_r}" y="${govde_w}" z="${sasi_h}"/>
+  </link>
+
+  <!-- ===== Çekmeceli kabin ===== -->
+  <link name="kabin_link">
+    <visual>
+      <geometry><box size="${kabin_l} ${kabin_w} ${kabin_h}"/></geometry>
+      <material name="kabin_grisi"/>
+    </visual>
+    <collision>
+      <geometry><box size="${kabin_l} ${kabin_w} ${kabin_h}"/></geometry>
+    </collision>
+
+    <!-- Arka yüzde iki çekmece kapağı + kulplar.
+         Çekmeceler ARKADA: hemşire robotun arkasından yükler,
+         ön taraf sensörlere (kamera, LiDAR) ayrılmıştır. -->
+    <visual>
+      <origin xyz="${-kabin_l/2 - 0.005} 0 0.14"/>
+      <geometry><box size="0.01 ${kabin_w - 0.06} 0.24"/></geometry>
+      <material name="hastane_beyazi"/>
+    </visual>
+    <visual>
+      <origin xyz="${-kabin_l/2 - 0.005} 0 -0.14"/>
+      <geometry><box size="0.01 ${kabin_w - 0.06} 0.24"/></geometry>
+      <material name="hastane_beyazi"/>
+    </visual>
+    <visual>
+      <origin xyz="${-kabin_l/2 - 0.02} 0 0.20"/>
+      <geometry><box size="0.02 0.16 0.02"/></geometry>
+      <material name="metal"/>
+    </visual>
+    <visual>
+      <origin xyz="${-kabin_l/2 - 0.02} 0 -0.08"/>
+      <geometry><box size="0.02 0.16 0.02"/></geometry>
+      <material name="metal"/>
+    </visual>
+
+    <!-- Üstte turkuaz kapak ve yeşil durum feneri -->
+    <visual>
+      <origin xyz="0 0 ${kabin_h/2 + 0.01}"/>
+      <geometry><box size="${kabin_l + 0.01} ${kabin_w + 0.01} 0.02"/></geometry>
+      <material name="turkuaz"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0 ${kabin_h/2 + 0.04}"/>
+      <geometry><cylinder radius="0.05" length="0.04"/></geometry>
+      <material name="durum_yesili"/>
+    </visual>
+
+    <xacro:kutu_inertia m="6.0" x="${kabin_l}" y="${kabin_w}" z="${kabin_h}"/>
+  </link>
+
+  <joint name="kabin_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="kabin_link"/>
+    <origin xyz="${kabin_x} 0 ${sasi_ust + kabin_h/2}"/>
+  </joint>
+
+  <!-- ===== Tahrikli tekerlekler (makro: sol ve sağ için aynı kod) =====
+       y_isaret = +1 → sol, -1 → sağ.
+       Silindir varsayılan olarak z ekseninde durur; x etrafında 90° (π/2)
+       çevirerek tekerleği dik konuma getiriyoruz. Dönme ekseni y. -->
+  <xacro:macro name="tahrik_tekeri" params="ad y_isaret">
+    <link name="${ad}_teker_link">
+      <visual>
+        <origin rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${teker_r}" length="${teker_w}"/></geometry>
+        <material name="koyu_gri"/>
+      </visual>
+      <!-- Jant göbeği: tekerleğin döndüğünü görebilmek için merkez dışı küçük bir işaret -->
+      <visual>
+        <origin xyz="0.035 ${y_isaret*teker_w/2} 0" rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="0.015" length="0.004"/></geometry>
+        <material name="turkuaz"/>
+      </visual>
+      <collision>
+        <origin rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${teker_r}" length="${teker_w}"/></geometry>
+      </collision>
+      <xacro:silindir_inertia m="1.5" r="${teker_r}" h="${teker_w}">
+        <origin rpy="${pi/2} 0 0"/>
+      </xacro:silindir_inertia>
+    </link>
+
+    <!-- continuous: sınırsız dönebilen eklem (teker) -->
+    <joint name="${ad}_teker_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="${ad}_teker_link"/>
+      <origin xyz="0 ${y_isaret*teker_aralik/2} 0"/>
+      <axis xyz="0 1 0"/>
+    </joint>
+
+    <!-- Lastik: yüksek sürtünme → patinaj yapmaz -->
+    <gazebo reference="${ad}_teker_link">
+      <mu1>1.2</mu1>
+      <mu2>1.2</mu2>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:tahrik_tekeri ad="sol" y_isaret="1"/>
+  <xacro:tahrik_tekeri ad="sag" y_isaret="-1"/>
+
+  <!-- ===== Sarhoş tekerler (caster) =====
+       Simülasyonda caster'ı sürtünmesiz bir küre olarak modelliyoruz:
+       her yöne serbestçe kayar, tıpkı dönebilen bir sarhoş teker gibi. -->
+  <xacro:macro name="caster" params="ad x">
+    <link name="${ad}_caster_link">
+      <visual>
+        <geometry><sphere radius="${caster_r}"/></geometry>
+        <material name="metal"/>
+      </visual>
+      <collision>
+        <geometry><sphere radius="${caster_r}"/></geometry>
+      </collision>
+      <xacro:kure_inertia m="0.5" r="${caster_r}"/>
+    </link>
+
+    <joint name="${ad}_caster_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="${ad}_caster_link"/>
+      <!-- Küre zemine değsin: merkez yerden caster_r kadar yukarıda -->
+      <origin xyz="${x} 0 ${caster_r - teker_r}"/>
+    </joint>
+
+    <gazebo reference="${ad}_caster_link">
+      <mu1>0.0</mu1>
+      <mu2>0.0</mu2>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:caster ad="on"   x="0.26"/>
+  <xacro:caster ad="arka" x="-0.20"/>
+
+</robot>

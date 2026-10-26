@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!--
+  Ortak tanımlar: renkler ve eylemsizlik (inertia) makroları.
+  Gazebo'nun fiziği doğru hesaplayabilmesi için her parçanın kütlesi
+  ve eylemsizlik matrisi olmalı. Formüller katı cisimler için standart
+  formüllerdir (kutu, silindir, küre).
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ===== Renk paleti (gerekçeler docs/tasarim.md, bölüm 4) ===== -->
+  <material name="hastane_beyazi"><color rgba="0.95 0.96 0.97 1"/></material>
+  <material name="turkuaz"><color rgba="0.0 0.65 0.65 1"/></material>
+  <material name="kabin_grisi"><color rgba="0.82 0.85 0.88 1"/></material>
+  <material name="koyu_gri"><color rgba="0.15 0.15 0.17 1"/></material>
+  <material name="metal"><color rgba="0.6 0.62 0.65 1"/></material>
+  <material name="durum_yesili"><color rgba="0.1 0.9 0.3 1"/></material>
+  <material name="bumper_turuncu"><color rgba="1.0 0.45 0.0 1"/></material>
+
+  <!-- ===== Eylemsizlik makroları ===== -->
+  <xacro:macro name="kutu_inertia" params="m x y z">
+    <inertial>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(y*y+z*z)/12}" ixy="0" ixz="0"
+               iyy="${m*(x*x+z*z)/12}" iyz="0"
+               izz="${m*(x*x+y*y)/12}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- Silindir: eksen z yönünde, r yarıçap, h yükseklik -->
+  <xacro:macro name="silindir_inertia" params="m r h *origin">
+    <inertial>
+      <xacro:insert_block name="origin"/>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(3*r*r+h*h)/12}" ixy="0" ixz="0"
+               iyy="${m*(3*r*r+h*h)/12}" iyz="0"
+               izz="${m*r*r/2}"/>
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="kure_inertia" params="m r">
+    <inertial>
+      <mass value="${m}"/>
+      <inertia ixx="${2*m*r*r/5}" ixy="0" ixz="0"
+               iyy="${2*m*r*r/5}" iyz="0"
+               izz="${2*m*r*r/5}"/>
+    </inertial>
+  </xacro:macro>
+
+</robot>

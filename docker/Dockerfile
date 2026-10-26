@@ -39,12 +39,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # tigervnc-standalone-server : Sanal ekran (VNC sunucusu)
 # novnc + websockify     : VNC ekranını tarayıcıya taşır (http://localhost:6080)
 # mesa-utils, libgl1-mesa-dri : Yazılımsal OpenGL (ekran kartı olmadan 3B çizim)
+# x11-apps, imagemagick, wmctrl : Rapor için ekran görüntüsü alma ve pencere yönetimi
 RUN apt-get update && apt-get install -y --no-install-recommends \
         xfce4 xfce4-terminal dbus-x11 \
         tigervnc-standalone-server \
         novnc websockify \
         mesa-utils libgl1-mesa-dri \
         nano less \
+        x11-apps imagemagick wmctrl \
     && rm -rf /var/lib/apt/lists/*
 
 # ---- 3) Ortam değişkenleri ----

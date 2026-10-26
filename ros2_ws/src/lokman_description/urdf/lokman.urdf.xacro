@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+  LOKMAN – Hastane koridoru malzeme taşıma robotu
+  Ana model dosyası: diğer parçaları bir araya getirir.
+
+  Dosya düzeni (her parça ayrı dosyada, böylece her üye kendi dosyasını commit eder):
+    ortak.xacro          renkler + eylemsizlik makroları
+    chassis.xacro        gövde, kabin, tekerlekler, caster'lar
+    surus.gazebo.xacro   diferansiyel sürüş eklentisi
+    lidar.xacro          2D LiDAR      (Aşama 4)
+    camera.xacro         kamera        (Aşama 4)
+    imu.xacro            IMU           (Aşama 4)
+    bumper.xacro         temas sensörü (Aşama 4)
+-->
+<robot name="lokman" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find lokman_description)/urdf/ortak.xacro"/>
+  <xacro:include filename="$(find lokman_description)/urdf/chassis.xacro"/>
+  <xacro:include filename="$(find lokman_description)/urdf/surus.gazebo.xacro"/>
+
+  <!-- Sensörler Aşama 4'te buraya eklenecek -->
+
+</robot>
