@@ -1,0 +1,15 @@
+# Ortamı tek komutla başlatmak için (./baslat.sh bunu kullanır)
+services:
+  ros:
+    build: ./docker
+    image: bimu4101-ros:lyrical
+    container_name: bimu4101-ros
+    platform: linux/arm64          # Apple Silicon
+    volumes:
+      - ./:/ws                     # Proje klasörü konteynerde /ws olarak görünür
+    ports:
+      - "127.0.0.1:6080:6080"      # Tarayıcı masaüstü (sadece bu Mac'ten erişilebilir)
+    shm_size: "1gb"                # Gazebo/RViz için paylaşımlı bellek
+    environment:
+      - LIBGL_ALWAYS_SOFTWARE=1
+      - ROS_DOMAIN_ID=0
