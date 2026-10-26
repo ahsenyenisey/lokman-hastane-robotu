@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>lokman_behavior</name>
+  <version>0.1.0</version>
+  <description>LOKMAN davranış düğümleri: ok tuşlarıyla sürüş ve sensör tabanlı kibar koridor sürüşü</description>
+  <maintainer email="ahsenyeuisei@gmail.com">Ahsen Yenisey</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

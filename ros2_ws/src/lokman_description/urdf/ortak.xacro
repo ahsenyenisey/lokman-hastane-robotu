@@ -7,14 +7,23 @@
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <!-- ===== Renk paleti (gerekçeler docs/tasarim.md, bölüm 4) ===== -->
-  <material name="hastane_beyazi"><color rgba="0.95 0.96 0.97 1"/></material>
-  <material name="turkuaz"><color rgba="0.0 0.65 0.65 1"/></material>
-  <material name="kabin_grisi"><color rgba="0.82 0.85 0.88 1"/></material>
-  <material name="koyu_gri"><color rgba="0.15 0.15 0.17 1"/></material>
-  <material name="metal"><color rgba="0.6 0.62 0.65 1"/></material>
-  <material name="durum_yesili"><color rgba="0.1 0.9 0.3 1"/></material>
-  <material name="bumper_turuncu"><color rgba="1.0 0.45 0.0 1"/></material>
+  <!-- ===== Renk paleti (gerekçeler docs/tasarim.md, bölüm 4) =====
+       Renkler her görsel parçanın İÇİNE yazılıyor (xacro:renk makrosu).
+       Dosyanın başında bir kez tanımlayıp adıyla çağırmak RViz'de renklerin
+       kaybolmasına (robotun gri görünmesine) yol açıyordu. -->
+  <xacro:property name="renkler" value="${dict(
+      hastane_beyazi = '0.95 0.96 0.97 1',
+      turkuaz        = '0.0 0.65 0.65 1',
+      kabin_grisi    = '0.82 0.85 0.88 1',
+      koyu_gri       = '0.15 0.15 0.17 1',
+      metal          = '0.6 0.62 0.65 1',
+      durum_yesili   = '0.1 0.9 0.3 1',
+      bumper_turuncu = '1.0 0.45 0.0 1')}"/>
+
+  <!-- Kullanım: <xacro:renk ad="turkuaz"/> -->
+  <xacro:macro name="renk" params="ad">
+    <material name="${ad}"><color rgba="${renkler[ad]}"/></material>
+  </xacro:macro>
 
   <!-- ===== Eylemsizlik makroları ===== -->
   <xacro:macro name="kutu_inertia" params="m x y z">

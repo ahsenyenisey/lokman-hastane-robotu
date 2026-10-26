@@ -50,7 +50,7 @@
     <visual>
       <origin xyz="${kasa_arka_x + kasa_l/2} 0 ${sasi_z}"/>
       <geometry><box size="${kasa_l} ${govde_w} ${sasi_h}"/></geometry>
-      <material name="hastane_beyazi"/>
+      <xacro:renk ad="hastane_beyazi"/>
     </visual>
     <collision>
       <origin xyz="${kasa_arka_x + kasa_l/2} 0 ${sasi_z}"/>
@@ -61,7 +61,7 @@
     <visual>
       <origin xyz="${burun_x} 0 ${sasi_z}"/>
       <geometry><cylinder radius="${burun_r}" length="${sasi_h}"/></geometry>
-      <material name="hastane_beyazi"/>
+      <xacro:renk ad="hastane_beyazi"/>
     </visual>
     <collision>
       <origin xyz="${burun_x} 0 ${sasi_z}"/>
@@ -72,12 +72,12 @@
     <visual>
       <origin xyz="${kasa_arka_x + kasa_l/2} 0 0.12"/>
       <geometry><box size="${kasa_l + 0.004} ${govde_w + 0.004} 0.035"/></geometry>
-      <material name="turkuaz"/>
+      <xacro:renk ad="turkuaz"/>
     </visual>
     <visual>
       <origin xyz="${burun_x} 0 0.12"/>
       <geometry><cylinder radius="${burun_r + 0.002}" length="0.035"/></geometry>
-      <material name="turkuaz"/>
+      <xacro:renk ad="turkuaz"/>
     </visual>
 
     <!-- Kütle: bataryalar tabanda → 18 kg, ağırlık merkezi alçakta -->
@@ -88,7 +88,7 @@
   <link name="kabin_link">
     <visual>
       <geometry><box size="${kabin_l} ${kabin_w} ${kabin_h}"/></geometry>
-      <material name="kabin_grisi"/>
+      <xacro:renk ad="kabin_grisi"/>
     </visual>
     <collision>
       <geometry><box size="${kabin_l} ${kabin_w} ${kabin_h}"/></geometry>
@@ -100,34 +100,34 @@
     <visual>
       <origin xyz="${-kabin_l/2 - 0.005} 0 0.14"/>
       <geometry><box size="0.01 ${kabin_w - 0.06} 0.24"/></geometry>
-      <material name="hastane_beyazi"/>
+      <xacro:renk ad="hastane_beyazi"/>
     </visual>
     <visual>
       <origin xyz="${-kabin_l/2 - 0.005} 0 -0.14"/>
       <geometry><box size="0.01 ${kabin_w - 0.06} 0.24"/></geometry>
-      <material name="hastane_beyazi"/>
+      <xacro:renk ad="hastane_beyazi"/>
     </visual>
     <visual>
       <origin xyz="${-kabin_l/2 - 0.02} 0 0.20"/>
       <geometry><box size="0.02 0.16 0.02"/></geometry>
-      <material name="metal"/>
+      <xacro:renk ad="metal"/>
     </visual>
     <visual>
       <origin xyz="${-kabin_l/2 - 0.02} 0 -0.08"/>
       <geometry><box size="0.02 0.16 0.02"/></geometry>
-      <material name="metal"/>
+      <xacro:renk ad="metal"/>
     </visual>
 
     <!-- Üstte turkuaz kapak ve yeşil durum feneri -->
     <visual>
       <origin xyz="0 0 ${kabin_h/2 + 0.01}"/>
       <geometry><box size="${kabin_l + 0.01} ${kabin_w + 0.01} 0.02"/></geometry>
-      <material name="turkuaz"/>
+      <xacro:renk ad="turkuaz"/>
     </visual>
     <visual>
       <origin xyz="0 0 ${kabin_h/2 + 0.04}"/>
       <geometry><cylinder radius="0.05" length="0.04"/></geometry>
-      <material name="durum_yesili"/>
+      <xacro:renk ad="durum_yesili"/>
     </visual>
 
     <xacro:kutu_inertia m="6.0" x="${kabin_l}" y="${kabin_w}" z="${kabin_h}"/>
@@ -148,13 +148,13 @@
       <visual>
         <origin rpy="${pi/2} 0 0"/>
         <geometry><cylinder radius="${teker_r}" length="${teker_w}"/></geometry>
-        <material name="koyu_gri"/>
+        <xacro:renk ad="koyu_gri"/>
       </visual>
       <!-- Jant göbeği: tekerleğin döndüğünü görebilmek için merkez dışı küçük bir işaret -->
       <visual>
         <origin xyz="0.035 ${y_isaret*teker_w/2} 0" rpy="${pi/2} 0 0"/>
         <geometry><cylinder radius="0.015" length="0.004"/></geometry>
-        <material name="turkuaz"/>
+        <xacro:renk ad="turkuaz"/>
       </visual>
       <collision>
         <origin rpy="${pi/2} 0 0"/>
@@ -190,7 +190,7 @@
     <link name="${ad}_caster_link">
       <visual>
         <geometry><sphere radius="${caster_r}"/></geometry>
-        <material name="metal"/>
+        <xacro:renk ad="metal"/>
       </visual>
       <collision>
         <geometry><sphere radius="${caster_r}"/></geometry>
