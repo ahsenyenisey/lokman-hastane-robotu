@@ -14,10 +14,9 @@ LOKMAN, hastane koridorlarında ilaç, numune tüpü ve steril malzeme taşımak
 
 | Üye | Sensör sorumluluğu |
 |---|---|
-| Ahsen Yenisey | [belirlenecek] |
-| Hüseyin Atay | [belirlenecek] |
-| İsa Şebib | [belirlenecek] |
-| Ortak | Bumper (temas sensörü) |
+| Ahsen Yenisey | 2D LiDAR |
+| İsa Şebib | Kamera, IMU |
+| Hüseyin Atay | Bumper (temas sensörü) |
 
 ## Neden böyle bir robot?
 
