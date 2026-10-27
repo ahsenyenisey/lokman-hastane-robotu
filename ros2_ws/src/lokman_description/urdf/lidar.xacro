@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<!--
+  SENSÖR: 2D LiDAR (lazer mesafe tarayıcı)
+  Sorumlu: Ahsen Yenisey
+
+  NE YAPAR?  Dönen bir lazer, çevresine ışın gönderip yansıyan ışığın dönüş
+             süresinden her açıdaki engelin uzaklığını ölçer. Sonuç: bir
+             "mesafe listesi" (her açı için bir mesafe).
+
+  NEREDE?    Burnun üstünde, yerden ~0.33 m yükseklikte.
+             Neden alçakta? Koridordaki tehlikeli engeller (sedye ayakları,
+             tekerlekli sandalye, çocuklar) alçaktır.
+
+  GÖRÜŞ AÇISI: 240° (-120° … +120°)
+             Tasarımda 270° düşünmüştük. Ama ±123°'den daha geriye bakan ışınlar
+             robotun KENDİ kabinine çarpıyor ve robot kendini engel sanıyor.
+             Bu yüzden görüş açısını 240°'ye indirdik (kabinin gölgesinde kalan
+             açılar ölçülmüyor).
+
+  ROS 2:     Topic  /scan
+             Mesaj  sensor_msgs/msg/LaserScan
+             Frame  lidar_link
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:property name="lidar_x" value="0.22"/>              <!-- burnun üstü -->
+  <xacro:property name="lidar_z" value="${sasi_ust + 0.03}"/> <!-- base_link'e göre 0.25 → yerden 0.33 -->
+
+  <link name="lidar_link">
+    <!-- Gövde: koyu silindir + üstte turkuaz pencere halkası -->
+    <visual>
+      <origin xyz="0 0 -0.01"/>
+      <geometry><cylinder radius="0.04" length="0.04"/></geometry>
+      <xacro:renk ad="koyu_gri"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0.015"/>
+      <geometry><cylinder radius="0.035" length="0.012"/></geometry>
+      <xacro:renk ad="turkuaz"/>
+    </visual>
+    <collision>
+      <geometry><cylinder radius="0.04" length="0.05"/></geometry>
+    </collision>
+    <xacro:silindir_inertia m="0.17" r="0.04" h="0.05">
+      <origin xyz="0 0 0"/>
+    </xacro:silindir_inertia>
+  </link>
+
+  <joint name="lidar_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="lidar_link"/>
+    <origin xyz="${lidar_x} 0 ${lidar_z}"/>
+  </joint>
+
+  <!-- Gazebo sensör tanımı -->
+  <gazebo reference="lidar_link">
+    <sensor name="lidar" type="gpu_lidar">
+      <topic>/scan</topic>
+      <!-- Mesajın frame_id'si: RViz noktaları doğru yere çizsin -->
+      <gz_frame_id>lidar_link</gz_frame_id>
+      <update_rate>10</update_rate>          <!-- 10 Hz: saniyede 10 tarama -->
+      <always_on>true</always_on>
+      <visualize>true</visualize>
+      <lidar>
+        <scan>
+          <horizontal>
+            <samples>240</samples>           <!-- 240 ışın → 1° çözünürlük -->
+            <resolution>1</resolution>
+            <min_angle>-2.0944</min_angle>    <!-- -120° -->
+            <max_angle>2.0944</max_angle>     <!-- +120° -->
+          </horizontal>
+          <vertical>
+            <samples>1</samples>             <!-- 2D: tek tarama düzlemi -->
+          </vertical>
+        </scan>
+        <range>
+          <min>0.12</min>                    <!-- 12 cm'den yakını ölçemez -->
+          <max>8.0</max>                     <!-- 8 m menzil: koridor için yeterli -->
+          <resolution>0.01</resolution>
+        </range>
+        <!-- Gerçek sensörler gibi küçük bir ölçüm gürültüsü (±1 cm) -->
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </lidar>
+    </sensor>
+  </gazebo>
+
+</robot>

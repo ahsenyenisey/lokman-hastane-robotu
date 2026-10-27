@@ -18,6 +18,7 @@
   <xacro:include filename="$(find lokman_description)/urdf/chassis.xacro"/>
   <xacro:include filename="$(find lokman_description)/urdf/surus.gazebo.xacro"/>
 
-  <!-- Sensörler Aşama 4'te buraya eklenecek -->
+  <!-- ===== Sensörler ===== -->
+  <xacro:include filename="$(find lokman_description)/urdf/lidar.xacro"/>
 
 </robot>

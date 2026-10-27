@@ -85,10 +85,10 @@ Her görsel karar bir işlevden geliyor.
 
 | Sensör | Sorumlu | Konum (`base_link`'e göre) | Teknik ayar | Neden **orada**? |
 |---|---|---|---|---|
-| **2D LiDAR** | [SORUMLU ÜYE] | Burnun üstünde, önde, **~0,33 m yükseklikte** | 270° tarama, 0,12–8 m menzil, 10 Hz | **Alçakta**, çünkü koridordaki tehlikeli engeller (sedye ayağı, tekerlekli sandalye ayaklığı, bir çocuk) alçak. 1 m yüksekteki bir LiDAR bunları görmez. **270°**, çünkü arkası kabinle kapalı. Robot zaten ileri gidiyor ve 270° yanları da kapsıyor. |
-| **Kamera** | [SORUMLU ÜYE] | Kabinin ön üst kısmında, **~0,85 m yükseklikte, 15° aşağı eğik** | 640×480, 15 Hz | Bu yükseklikte hem önündeki zemini hem de duvardaki oda/kapı numaralarını görür. Aşağı eğim, 1,5 m ilerisindeki zemini de görüş alanına alır. 15 Hz, yazılımsal render altında akıcı çalışmak için bir uzlaşı. |
-| **IMU** | [SORUMLU ÜYE] | **Gövdenin tam merkezinde, tahrik aksının üstünde** | 100 Hz, ivme + açısal hız + yönelim | Robot yerinde dönerken dönme merkezi burası. Bu noktada merkezkaç ivmesi en düşük olur. IMU böylece dönüşten değil **gerçek sarsıntı ve eğimden** kaynaklanan veriyi ölçer. Bu sarsıntı, taşınan ilacın maruz kaldığı sarsıntının ta kendisi. |
-| **Bumper (temas)** | **Ortak** | Burun boyunca, **yerden 0,05–0,11 m** | Temas olayı | LiDAR'ın **kör kaldığı durumlar** için son savunma hattı: tarama düzleminin altında kalan alçak cisimler ve gerçek hayatta cam kapı veya ayna gibi lazerin geçip gittiği yüzeyler. |
+| **2D LiDAR** | Ahsen Yenisey | Burnun üstünde, önde, **~0,33 m yükseklikte** | 240° tarama (1° çözünürlük), 0,12–8 m menzil, 10 Hz | **Alçakta**, çünkü koridordaki tehlikeli engeller (sedye ayağı, tekerlekli sandalye ayaklığı, bir çocuk) alçak. 1 m yüksekteki bir LiDAR bunları görmez. **240°**: Tasarımda 270° düşünmüştük. Ancak ±123°'den daha geriye bakan ışınlar robotun kendi kabinine çarpıp robotun kendini engel sanmasına yol açıyordu. Bu yüzden görüş açısı 240°'ye indirildi. Bu açı yanları tamamen kapsıyor. |
+| **Kamera** | İsa Şebib | Kabinin ön üst kısmında, **~0,85 m yükseklikte, 15° aşağı eğik** | 640×480, 15 Hz | Bu yükseklikte hem önündeki zemini hem de duvardaki oda/kapı numaralarını görür. Aşağı eğim, 1,5 m ilerisindeki zemini de görüş alanına alır. 15 Hz, yazılımsal render altında akıcı çalışmak için bir uzlaşı. |
+| **IMU** | İsa Şebib | **Gövdenin tam merkezinde, tahrik aksının üstünde** | 100 Hz, ivme + açısal hız + yönelim | Robot yerinde dönerken dönme merkezi burası. Bu noktada merkezkaç ivmesi en düşük olur. IMU böylece dönüşten değil **gerçek sarsıntı ve eğimden** kaynaklanan veriyi ölçer. Bu sarsıntı, taşınan ilacın maruz kaldığı sarsıntının ta kendisi. |
+| **Bumper (temas)** | Hüseyin Atay (ek sensör) | Burun boyunca, **yerden 0,05–0,11 m** | Temas olayı | LiDAR'ın **kör kaldığı durumlar** için son savunma hattı: tarama düzleminin altında kalan alçak cisimler ve gerçek hayatta cam kapı veya ayna gibi lazerin geçip gittiği yüzeyler. |
 
 **Sensörlerin birbirini tamamlaması (sunumda vurgulanacak):**
 **LiDAR uzağı görür → yavaşlar ve kaçınır. Bumper LiDAR'ın kaçırdığını yakalar → geri çekilir. IMU yükün ne yaşadığını ölçer. Kamera insan gözüyle bakar → görselleştirme ve işaret tanıma.**
@@ -130,8 +130,8 @@ Sıradan "engel görünce dön" yerine, **hastane görgüsüne uygun** bir durum
 | `lokman_behavior` | Python davranış düğümü (`kibar_surus` düğümü) |
 
 **Commit sorumlulukları:**
-- `lidar.xacro` → [SORUMLU ÜYE]
-- `camera.xacro` → [SORUMLU ÜYE]
-- `imu.xacro` → [SORUMLU ÜYE]
-- `bumper.xacro` → ortak (üçünüz de katkı verebilirsiniz)
+- `lidar.xacro` → Ahsen Yenisey
+- `camera.xacro` → İsa Şebib
+- `imu.xacro` → İsa Şebib
+- `bumper.xacro` → Hüseyin Atay
 - Diğer dosyalar → repo sahibi

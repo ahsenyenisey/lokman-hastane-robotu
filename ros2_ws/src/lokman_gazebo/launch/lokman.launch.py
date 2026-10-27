@@ -14,6 +14,7 @@ Tek komutla şunları başlatır:
   ros2 launch lokman_gazebo lokman.launch.py dunya:=empty.sdf    # boş dünya (test)
   ros2 launch lokman_gazebo lokman.launch.py x:=8.0 y:=0.0 yaw:=0.0   # başlangıç konumu
 """
+import glob
 import os
 
 from ament_index_python.packages import get_package_share_directory
@@ -81,13 +82,24 @@ def generate_launch_description():
         output='screen',
     )
 
-    # 4) Köprü
-    kopru = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        parameters=[{'config_file': kopru_ayari, 'use_sim_time': True}],
-        output='screen',
-    )
+    # 4) Köprüler
+    #   kopru.yaml           : temel topic'ler (saat, hız komutu, odometri, TF)
+    #   kopru_<sensör>.yaml  : her sensörün kendi köprü dosyası. Böylece her üye
+    #                          kendi sensörünü ayrı dosyada tutar; launch dosyası
+    #                          config/ klasöründeki bütün kopru_*.yaml dosyalarını
+    #                          kendiliğinden bulup her biri için bir köprü başlatır.
+    kopru_dosyalari = [kopru_ayari] + sorted(
+        glob.glob(os.path.join(gz_pkg, 'config', 'kopru_*.yaml')))
+    kopruler = [
+        Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            name=os.path.splitext(os.path.basename(dosya))[0],  # ör. kopru_lidar
+            parameters=[{'config_file': dosya, 'use_sim_time': True}],
+            output='screen',
+        )
+        for dosya in kopru_dosyalari
+    ]
 
     # 5) RViz
     rviz = Node(
@@ -98,4 +110,4 @@ def generate_launch_description():
         output='screen',
     )
 
-    return LaunchDescription(argumanlar + [gazebo, rsp, spawn, kopru, rviz])
+    return LaunchDescription(argumanlar + [gazebo, rsp, spawn, rviz] + kopruler)
