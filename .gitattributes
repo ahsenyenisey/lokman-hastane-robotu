@@ -1,0 +1,6 @@
+# Windows bilgisayarlarda .sh dosyalarının satır sonları bozulmasın (konteyner açılmaz)
+*.sh   text eol=lf
+*.py   text eol=lf
+*.yaml text eol=lf
+*.xacro text eol=lf
+*.sdf  text eol=lf

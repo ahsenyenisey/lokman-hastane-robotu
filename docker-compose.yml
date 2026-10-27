@@ -4,7 +4,6 @@ services:
     build: ./docker
     image: bimu4101-ros:lyrical
     container_name: bimu4101-ros
-    platform: linux/arm64          # Apple Silicon
     volumes:
       - ./:/ws                     # Proje klasörü konteynerde /ws olarak görünür
     ports:
