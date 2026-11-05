@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<!--
+  SENSÖR: IMU (Ataletsel Ölçüm Birimi – ivmeölçer + jiroskop)
+  Sorumlu: İsa Şebib
+
+  NE YAPAR?  İki şey ölçer:
+               - Doğrusal ivme (m/s²): robot hızlanınca, frenleyince, sarsılınca
+                 değişir. Robot dururken z ekseninde yerçekimini (~9.8) görür.
+               - Açısal hız (rad/s): robot ne kadar hızlı dönüyor.
+             Telefonu yan çevirince ekranı döndüren sensör.
+
+  NEDEN?     LOKMAN ilaç, kan tüpü gibi hassas yük taşıyor. IMU yükün
+             sarsıntısını ölçer; davranış düğümü sarsıntı eşiği aşılınca
+             robotu yavaşlatır ("yük koruma").
+
+  NEREDE?    Gövdenin tam ortası, tahrik aksının hemen üstü (base_link'e göre
+             z = 0.05, yerden 0.13 m). Gövdenin içinde, dışarıdan görünmez.
+             Neden merkez? Robot yerinde dönerken bu nokta sabit kalır.
+             IMU dönme merkezinden uzakta olsaydı dönüşteki merkezkaç ivmesini
+             (a = ω²·r) sarsıntı sanırdı.
+
+  AYARLAR:   100 Hz (sarsıntı hızlı bir olay; LiDAR'ın 10 Hz'i yetmez).
+             Gerçek sensörler gibi küçük gürültü eklendi.
+
+  ROS 2:     Topic  /imu
+             Mesaj  sensor_msgs/msg/Imu
+             Frame  imu_link
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:property name="imu_z" value="0.05"/>  <!-- tahrik aksının (dönme merkezinin) üstü -->
+
+  <link name="imu_link">
+    <!-- Küçük bir devre kartı: 3 × 3 × 1 cm -->
+    <visual>
+      <geometry><box size="0.03 0.03 0.01"/></geometry>
+      <xacro:renk ad="koyu_gri"/>
+    </visual>
+    <collision>
+      <geometry><box size="0.03 0.03 0.01"/></geometry>
+    </collision>
+    <xacro:kutu_inertia m="0.01" x="0.03" y="0.03" z="0.01"/>
+  </link>
+
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 ${imu_z}"/>
+  </joint>
+
+  <!-- Gürültü makrosu: aynı ayarı 3 eksene tekrar tekrar yazmamak için -->
+  <xacro:macro name="imu_gurultu" params="stddev">
+    <noise type="gaussian">
+      <mean>0.0</mean>
+      <stddev>${stddev}</stddev>
+    </noise>
+  </xacro:macro>
+
+  <!-- Gazebo sensör tanımı (dünyadaki gz-sim-imu-system bunu çalıştırır) -->
+  <gazebo reference="imu_link">
+    <sensor name="imu" type="imu">
+      <topic>/imu</topic>
+      <gz_frame_id>imu_link</gz_frame_id>
+      <update_rate>100</update_rate>   <!-- 100 Hz: saniyede 100 ölçüm -->
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <imu>
+        <!-- Jiroskop gürültüsü: ±0.002 rad/s -->
+        <angular_velocity>
+          <x><xacro:imu_gurultu stddev="0.002"/></x>
+          <y><xacro:imu_gurultu stddev="0.002"/></y>
+          <z><xacro:imu_gurultu stddev="0.002"/></z>
+        </angular_velocity>
+        <!-- İvmeölçer gürültüsü: ±0.02 m/s² -->
+        <linear_acceleration>
+          <x><xacro:imu_gurultu stddev="0.02"/></x>
+          <y><xacro:imu_gurultu stddev="0.02"/></y>
+          <z><xacro:imu_gurultu stddev="0.02"/></z>
+        </linear_acceleration>
+      </imu>
+    </sensor>
+  </gazebo>
+
+</robot>
