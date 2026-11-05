@@ -20,6 +20,8 @@ setup(
         'console_scripts': [
             # ros2 run lokman_behavior ok_tuslari
             'ok_tuslari = lokman_behavior.ok_tuslari:main',
+            # ros2 run lokman_behavior kibar_surus
+            'kibar_surus = lokman_behavior.kibar_surus:main',
         ],
     },
 )
