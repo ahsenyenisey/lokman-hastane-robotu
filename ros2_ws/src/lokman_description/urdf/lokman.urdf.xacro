@@ -20,5 +20,6 @@
 
   <!-- ===== Sensörler ===== -->
   <xacro:include filename="$(find lokman_description)/urdf/lidar.xacro"/>
+  <xacro:include filename="$(find lokman_description)/urdf/camera.xacro"/>
 
 </robot>

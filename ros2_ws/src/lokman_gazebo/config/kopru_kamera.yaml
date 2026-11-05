@@ -1,0 +1,14 @@
+# Kamera köprüsü: Gazebo'nun ürettiği görüntüyü ve kamera ayarlarını ROS 2'ye taşır.
+# Sorumlu: İsa Şebib
+- ros_topic_name: "/kamera/image_raw"
+  gz_topic_name: "/kamera/image_raw"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+
+# Kamera ayarları: çözünürlük, odak uzaklığı vb. (RViz'in Camera görüntüsü için gerekli)
+- ros_topic_name: "/kamera/camera_info"
+  gz_topic_name: "/kamera/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
+  direction: GZ_TO_ROS

@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<!--
+  SENSÖR: Kamera (RGB, renkli görüntü)
+  Sorumlu: İsa Şebib
+
+  NE YAPAR?  Telefon kamerası gibi saniyede birkaç kare renkli fotoğraf çeker.
+             LiDAR "ne kadar uzakta?" sorusunu cevaplar, kamera ise "ne var?"
+             sorusunu: renk, şekil, işaret, kapı numarası.
+
+  NEREDE?    Kabinin ön yüzünün üstünde, yerden ~0.86 m yükseklikte,
+             15° aşağı eğik.
+             Neden? Bu yükseklikte hem duvardaki oda/kapı numaralarını hem de
+             1.5 m ilerideki zemini görür. LiDAR'ın önünde değil üstünde olduğu
+             için LiDAR'ın görüşünü kapatmaz.
+
+  AYARLAR:   640×480 piksel, 15 Hz, ~69° yatay görüş açısı.
+             15 Hz: ekran kartı olmadan (yazılımsal render) akıcı çalışabilmek
+             için seçilen bir uzlaşı.
+
+  ROS 2:     /kamera/image_raw    sensor_msgs/msg/Image       (görüntü)
+             /kamera/camera_info  sensor_msgs/msg/CameraInfo  (kamera ayarları)
+             Frame: kamera_optik_link
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Kabinin ön yüzü base_link'e göre x = 0.08, üst yüzü z = 0.82 -->
+  <xacro:property name="kamera_x"    value="${kasa_arka_x + kabin_l + 0.02}"/>
+  <xacro:property name="kamera_z"    value="${sasi_ust + kabin_h - 0.04}"/>
+  <xacro:property name="kamera_egim" value="0.26"/>  <!-- 15° aşağı (radyan) -->
+
+  <link name="kamera_link">
+    <!-- Gövde: koyu kutu + turkuaz çerçeveli lens -->
+    <visual>
+      <geometry><box size="0.04 0.10 0.035"/></geometry>
+      <xacro:renk ad="koyu_gri"/>
+    </visual>
+    <visual>
+      <origin xyz="0.022 0 0" rpy="0 ${pi/2} 0"/>
+      <geometry><cylinder radius="0.014" length="0.006"/></geometry>
+      <xacro:renk ad="turkuaz"/>
+    </visual>
+    <collision>
+      <geometry><box size="0.04 0.10 0.035"/></geometry>
+    </collision>
+    <xacro:kutu_inertia m="0.08" x="0.04" y="0.10" z="0.035"/>
+  </link>
+
+  <joint name="kamera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="kamera_link"/>
+    <origin xyz="${kamera_x} 0 ${kamera_z}" rpy="0 ${kamera_egim} 0"/>
+  </joint>
+
+  <!-- OPTİK FRAME: Görüntü işlemede kamera ekseni farklı tanımlanır
+       (z → ileri, x → sağ, y → aşağı). ROS'ta robot ekseni ise
+       (x → ileri, y → sol, z → yukarı). Bu ek frame aradaki çeviriyi yapar;
+       RViz görüntüyü bu sayede doğru yöne çizer. -->
+  <link name="kamera_optik_link"/>
+  <joint name="kamera_optik_joint" type="fixed">
+    <parent link="kamera_link"/>
+    <child link="kamera_optik_link"/>
+    <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+  </joint>
+
+  <!-- Gazebo sensör tanımı -->
+  <gazebo reference="kamera_link">
+    <sensor name="kamera" type="camera">
+      <topic>/kamera/image_raw</topic>
+      <gz_frame_id>kamera_optik_link</gz_frame_id>
+      <update_rate>15</update_rate>
+      <always_on>true</always_on>
+      <visualize>true</visualize>
+      <camera>
+        <camera_info_topic>/kamera/camera_info</camera_info_topic>
+        <horizontal_fov>1.2</horizontal_fov>   <!-- ~69° -->
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.05</near>   <!-- 5 cm'den yakını çizme -->
+          <far>20.0</far>     <!-- 20 m'den uzağı çizme -->
+        </clip>
+        <!-- Gerçek kameralardaki gibi hafif görüntü gürültüsü -->
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.005</stddev>
+        </noise>
+      </camera>
+    </sensor>
+  </gazebo>
+
+</robot>
