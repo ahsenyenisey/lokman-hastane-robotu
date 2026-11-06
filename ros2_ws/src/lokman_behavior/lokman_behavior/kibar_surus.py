@@ -11,12 +11,12 @@ Yazarlar:  İsa Şebib   – LiDAR kuralları (SEYİR / YAVAŞLA / KAÇIN), IMU 
 GİRDİLER (abonelikler)
   /scan    sensor_msgs/msg/LaserScan   LiDAR: 240 ışın, -120° … +120°
   /imu     sensor_msgs/msg/Imu         IMU: ivme + açısal hız, ~100 Hz
-  /bumper  ros_gz_interfaces/Contacts  Bumper (Hüseyin ekleyecek)
+  /bumper  ros_gz_interfaces/Contacts  Bumper
 
 ÇIKTILAR (yayınlar)
   /cmd_vel       geometry_msgs/msg/Twist  Hız komutu (linear.x m/s, angular.z rad/s)
   /lokman/durum  std_msgs/msg/String      O anki durum (demoda izlemek için)
-
+  /lokman/bumper_temas: std_msgs/msg/Bool
 KARAR KURALI (öncelik sırasıyla, ilk tutan kural uygulanır)
   🔴 GERİ ÇEKİL  bumper temas etti           → geri git, sonra boş tarafa dön   [Hüseyin]
   🟠 KAÇIN       önde engel ≤ 0.50 m         → dur, daha boş tarafa yerinde dön
@@ -39,6 +39,8 @@ from rclpy.qos import qos_profile_sensor_data
 from rclpy.signals import SignalHandlerOptions
 from sensor_msgs.msg import Imu, LaserScan
 from std_msgs.msg import String
+from ros_gz_interfaces.msg import Contacts
+from std_msgs.msg import Bool
 
 # =====================================================================
 # EŞİKLER VE AYARLAR (sunumda anlatılacak sayılar burada)
@@ -105,6 +107,14 @@ SCAN_ZAMAN_ASIMI = 0.5   # s: bu süredir LiDAR verisi gelmediyse DUR
                          #    (sensörü görmeyen robot kör sürmesin)
 
 
+# --- Bumper refleksi (GERİ ÇEKİL) ---
+GERI_HIZ = -0.1           # m/s: geri giderken hız
+GERI_SURE = 1.5           # s: ne kadar geri gidilecek (~15 cm)
+CEKIL_DONUS_HIZI = 0.8    # rad/s: geri çekildikten sonra dönüş hızı
+CEKIL_DONUS_SURE = 1.0    # s: ne kadar dönülecek (~45°)
+
+
+
 class KibarSurus(Node):
 
     def __init__(self):
@@ -122,6 +132,17 @@ class KibarSurus(Node):
                                  qos_profile_sensor_data)
         # GERİ ÇEKİL: Hüseyin buraya /bumper aboneliğini ekleyecek
         # (ros_gz_interfaces/msg/Contacts).
+        # Bumper aboneliği (qos_profile_sensor_data ile)
+        self.create_subscription(Contacts, '/bumper', self.bumper_geldi, qos_profile_sensor_data)
+
+        # Görselleştirme: rqt_plot ile çarpma anlarını göstermek için yayıncı
+        self.bumper_pub = self.create_publisher(Bool, '/lokman/bumper_temas', 10)
+
+        # GERİ ÇEKİL manevrası için zamanlayıcı değişkenleri
+        self.geri_cekil_bitis = None
+        self.donus_bitis = None
+        self.cekil_yonu = 0.0
+
 
         # --- Yayıncılar ---
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
@@ -150,6 +171,12 @@ class KibarSurus(Node):
     def scan_geldi(self, msg: LaserScan):
         self.son_scan = msg
         self.son_scan_zamani = self.get_clock().now()
+
+    def bumper_geldi(self, msg: Contacts):
+        # Gazebo yalnızca temas varken mesaj gönderir. contacts listesi doluysa çarptık.
+        if len(msg.contacts) > 0:
+            self.bumper_temas = True
+        self.bumper_pub.publish(Bool(data=len(msg.contacts) > 0))
 
     def imu_geldi(self, msg: Imu):
         # Yatay ivme: ileri-geri (x) ve sağa-sola (y) ivmenin bileşkesi.
@@ -240,6 +267,31 @@ class KibarSurus(Node):
         # --- 🔴 GERİ ÇEKİL (en yüksek öncelik) ---
         # GERİ ÇEKİL: Hüseyin ekleyecek.
         # if self.bumper_temas ... : geri git, sonra boş tarafa dön; return
+
+        # --- 🔴 GERİ ÇEKİL (en yüksek öncelik) ---
+        if self.bumper_temas and self.durum != 'GERI_CEKIL':
+            self.durum_degistir('GERI_CEKIL', 'bumper temas → geri çekil')
+            self.geri_cekil_bitis = simdi + Duration(seconds=GERI_SURE)
+            self.donus_bitis = self.geri_cekil_bitis + Duration(seconds=CEKIL_DONUS_SURE)
+            
+            # Daha boş olan tarafı bul (kaçış yönü)
+            sol_bosluk = self.sektor_mesafeleri(self.son_scan, SOL_SEKTOR)
+            sag_bosluk = self.sektor_mesafeleri(self.son_scan, SAG_SEKTOR)
+            self.cekil_yonu = 1.0 if sol_bosluk > sag_bosluk else -1.0
+            
+        if self.durum == 'GERI_CEKIL':
+            if simdi < self.geri_cekil_bitis:
+                v, w = GERI_HIZ, 0.0
+            elif simdi < self.donus_bitis:
+                v, w = 0.0, CEKIL_DONUS_HIZI * self.cekil_yonu
+            else:
+                self.bumper_temas = False
+                self.durum_degistir('SEYIR', 'geri çekilme bitti')
+                v, w = SEYIR_HIZI, 0.0
+            
+            self.gonder(v, w)
+            self.durum_pub.publish(String(data=self.durum))
+            return
 
         # --- LiDAR: ön, sol ve sağ sektörler ---
         on = self.sektor_mesafeleri(self.son_scan, ON_SEKTOR)
