@@ -3,8 +3,8 @@ project(lokman_description)
 
 find_package(ament_cmake REQUIRED)
 
-# Model, RViz ve launch dosyalarını kurulum klasörüne kopyala
-install(DIRECTORY urdf rviz launch
+# Model ve RViz dosyalarını kurulum klasörüne kopyala
+install(DIRECTORY urdf rviz
   DESTINATION share/${PROJECT_NAME})
 
 ament_package()
