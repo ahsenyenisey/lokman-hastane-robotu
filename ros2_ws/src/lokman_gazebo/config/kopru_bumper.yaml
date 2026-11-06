@@ -1,0 +1,7 @@
+# Bumper köprüsü: Gazebo'nun temas mesajlarını ROS 2'ye taşır.
+# Sorumlu: Hüseyin Atay
+- ros_topic_name: "/bumper"
+  gz_topic_name: "/bumper"
+  ros_type_name: "ros_gz_interfaces/msg/Contacts"
+  gz_type_name: "gz.msgs.Contacts"
+  direction: GZ_TO_ROS

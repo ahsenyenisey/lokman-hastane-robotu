@@ -22,5 +22,6 @@
   <xacro:include filename="$(find lokman_description)/urdf/lidar.xacro"/>
   <xacro:include filename="$(find lokman_description)/urdf/camera.xacro"/>
   <xacro:include filename="$(find lokman_description)/urdf/imu.xacro"/>
+  <xacro:include filename="$(find lokman_description)/urdf/bumper.xacro"/>
 
 </robot>

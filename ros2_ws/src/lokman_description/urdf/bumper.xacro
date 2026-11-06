@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!--
+    NE YAPAR: LiDAR'ın göremediği alçak engelleri yakalayan temas sensörü (tampon).
+    NEREDE: Robotun burnunda, yerden 0.05-0.11m yükseklikte.
+    NEDEN: Devrik tabure gibi kısa engellere çarpıldığında sistemi uyarmak için (son savunma hattı).
+    ROS 2: /bumper (ros_gz_interfaces/msg/Contacts)
+    Sorumlu: Hüseyin Atay
+  -->
+
+  <link name="bumper_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.235" length="0.06"/>
+      </geometry>
+      <xacro:renk ad="bumper_turuncu"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.235" length="0.06"/>
+      </geometry>
+    </collision>
+    <xacro:silindir_inertia m="0.2" r="0.235" h="0.06">
+      <origin xyz="0 0 0"/>
+    </xacro:silindir_inertia>
+  </link>
+
+  <joint name="bumper_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="bumper_link"/>
+    <origin xyz="${burun_x} 0 0.0"/>
+  </joint>
+
+  <!-- TUZAK 1 ÇÖZÜMÜ: Link'in ana gövdeyle birleşmesini engeller -->
+  <gazebo reference="bumper_joint">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+
+  <!-- TUZAK 2 ÇÖZÜMÜ: <topic> etiketi <contact> etiketinin İÇİNDE -->
+  <gazebo reference="bumper_link">
+    <sensor name="bumper" type="contact">
+      <update_rate>30</update_rate>
+      <always_on>true</always_on>
+      <contact>
+        <collision>bumper_link_collision</collision>
+        <topic>/bumper</topic>
+      </contact>
+    </sensor>
+  </gazebo>
+</robot>
