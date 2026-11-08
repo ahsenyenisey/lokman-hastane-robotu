@@ -12,11 +12,11 @@ LOKMAN, hastane koridorlarında ilaç, numune tüpü ve steril malzeme taşımak
 
 ## Ekip
 
-| Üye | Sensör sorumluluğu |
-|---|---|
-| Ahsen Yenisey | 2D LiDAR |
-| İsa Şebib | Kamera, IMU |
-| Hüseyin Atay | Bumper (temas sensörü) |
+| Üye | Öğrenci no | Sensör sorumluluğu | Diğer katkılar |
+|---|---|---|---|
+| Ahsen Yenisey | 1306230123 | 2D LiDAR | Docker ortamı, robot modeli, diferansiyel sürüş, dünya, launch, ok tuşlu sürüş |
+| İsa Şebib | 1306220177 | Kamera, IMU | Davranış düğümü (SEYİR / YAVAŞLA / KAÇIN, IMU yük koruma) |
+| Hüseyin Atay | 1306230081 | Bumper (ek sensör) | GERİ ÇEKİL kuralı, rapor, demo videosu |
 
 ## Neden böyle bir robot?
 
@@ -48,8 +48,10 @@ Engelleri bilerek seçtik. Örneğin **sedyenin** yalnızca ince ayakları LiDAR
 |---|---|---|---|---|
 | 2D LiDAR | Burnun üstü, yerden 0,33 m | `/scan` | `sensor_msgs/msg/LaserScan` | RViz |
 | Kamera | Kabinin ön üstü, 0,86 m, 15° aşağı eğik | `/kamera/image_raw` | `sensor_msgs/msg/Image` | rqt_image_view, RViz |
-| IMU | Gövde merkezi, tahrik aksının üstü | `/imu` | `sensor_msgs/msg/Imu` | rqt_plot |
-| Bumper | Ön burun boyunca | `/bumper` | temas mesajı | terminal / RViz |
+| IMU | Gövde merkezi, tahrik aksının üstü (0,13 m) | `/imu` | `sensor_msgs/msg/Imu` | rqt_plot |
+| Bumper | Burnu saran tampon, 0,05–0,11 m | `/bumper` | `ros_gz_interfaces/msg/Contacts` | zaman grafiği, terminal |
+
+Kamera ayrıca `/kamera/camera_info` (`sensor_msgs/msg/CameraInfo`) yayınlıyor. Davranış düğümü bumper temasını görselleştirmek için `/lokman/bumper_temas` (`std_msgs/msg/Bool`) topic'ine de yayın yapıyor.
 
 <p align="center">
   <img src="docs/img/rviz_lidar_kamera.png" width="800" alt="RViz: LiDAR noktaları ve kamera görüntüsü">
@@ -62,6 +64,38 @@ Engelleri bilerek seçtik. Örneğin **sedyenin** yalnızca ince ayakları LiDAR
 </p>
 
 *Robotun kamerasından görünen koridor.*
+
+<p align="center">
+  <img src="docs/img/bumper_temas.png" width="700" alt="Bumper'ın devrik tabureye teması">
+</p>
+
+*Devrik tabure LiDAR'ın tarama düzleminin altında kalıyor. Robot ona çarptığında bumper temas algılıyor.*
+
+<p align="center">
+  <img src="docs/img/bumper_grafik.png" width="700" alt="Bumper teması ve hız komutu grafiği">
+</p>
+
+*Üstte bumper temasları, altta `/cmd_vel` hız komutu. Her temastan hemen sonra hız −0,1 m/s'ye iniyor (geri çekilme).*
+
+## Davranış düğümü: kibar koridor sürüşü
+
+`kibar_surus` düğümü LiDAR, IMU ve bumper verisine göre karar veren öncelikli bir durum makinesi. Sensör geri çağırmaları yalnızca en son veriyi saklıyor, kararı saniyede 10 kez çalışan bir zamanlayıcı veriyor. Kurallar yukarıdan aşağı kontrol ediliyor, ilk tutan kural uygulanıyor:
+
+| Öncelik | Durum | Koşul | Hareket |
+|---|---|---|---|
+| 1 | GERİ ÇEKİL | Bumper temas etti | 1,5 s geri (−0,1 m/s), sonra 1 s boş tarafa dönüş (0,8 rad/s) |
+| 2 | KAÇIN | Önde engel ≤ 0,5 m (çıkış > 0,8 m) | Dur, daha boş tarafa yerinde dön |
+| 3 | YAVAŞLA | Önde engel 0,5–1,0 m | Hız mesafeyle orantılı düşer (en az 0,08 m/s) |
+| 4 | SEYİR | Önde engel > 1,0 m | 0,35 m/s, koridorun ortasında kal |
+| + | YÜK KORUMA | IMU yatay ivmesi > 2,0 m/s² | 2 s boyunca hız yarıya iner |
+
+LiDAR verisi 0,5 s'den eskiyse robot durur. Düğüm kapatılırken robota son olarak "dur" komutu gönderilir. Eşiklerin hepsi `kibar_surus.py` dosyasının başında, ölçüm gerekçeleriyle birlikte tanımlı.
+
+<p align="center">
+  <img src="docs/img/geri_cekil_log.png" width="700" alt="GERİ ÇEKİL durum geçişleri">
+</p>
+
+*Bumper teması sırasında durum geçişleri: SEYİR → GERİ ÇEKİL → SEYİR.*
 
 ## Kurulum
 
@@ -118,12 +152,20 @@ ros2 run lokman_behavior ok_tuslari
 ```
 ↑ ↓ ← → ile sürülür, boşluk tuşu durdurur, `q` çıkar. Tuşu bırakınca robot kendiliğinden durur.
 
+**Robotu kendi başına sürmek** (davranış düğümü, ikinci bir terminalde):
+```bash
+ros2 run lokman_behavior kibar_surus
+ros2 topic echo /lokman/durum            # robotun anlık durumu
+```
+
 **Sensör verilerini kontrol etmek:**
 ```bash
 ros2 topic list                          # bütün topic'ler
 ros2 topic hz /scan                      # LiDAR yayın hızı
 ros2 topic echo /scan --once             # tek bir LiDAR mesajı
 ros2 run rqt_image_view rqt_image_view   # kamera görüntüsü
+ros2 run rqt_plot rqt_plot               # IMU (topic pencereden eklenir)
+ros2 topic echo /bumper                  # bumper temasları
 ```
 
 Simülasyonu kapatmak için launch komutunu çalıştırdığınız terminalde **Ctrl+C**'ye basın. Ortamı tamamen kapatmak için ana bilgisayarda `./durdur.sh` (Windows'ta `.\durdur.ps1`) çalıştırın.
@@ -153,7 +195,9 @@ Simülasyonu kapatmak için launch komutunu çalıştırdığınız terminalde *
     │   ├── launch/lokman.launch.py
     │   └── config/kopru*.yaml
     └── lokman_behavior/       # Python düğümleri
-        └── lokman_behavior/ok_tuslari.py
+        └── lokman_behavior/
+            ├── ok_tuslari.py        # ok tuşlarıyla elle sürüş
+            └── kibar_surus.py       # sensör tabanlı davranış düğümü
 ```
 
 ## Hareket sistemi
@@ -170,6 +214,8 @@ Ani kalkış ve frenlerde taşınan yük sarsılmasın diye eklentiye ivme sın�
 ## Bilinen sorunlar
 
 - Konteynerde ekran kartı olmadığı için Gazebo görüntüyü işlemciyle çiziyor. Bu yüzden biraz yavaş çalışabilir. Varsayılan render motoru (Ogre2) bu durumda pencerenin donmasına yol açtığı için launch dosyasında daha hafif olan **Ogre1** motorunu seçtik.
+- Ekran kartı olmadığı için sensörler hedef yayın hızlarının %85–90'ında çalışıyor. Davranış 10 Hz'de karar verdiği için bu fark davranışı etkilemiyor.
+- Devrik tabure LiDAR'ın altında kaldığı için robot geri çekildikten sonra onu yine göremiyor ve aynı engele birkaç kez temas edebiliyor.
 - RViz'de robot modeli gri görünüyor (renkler yalnızca Gazebo'da görünüyor). Bu durum yazılımsal çizimle ilgili ve işlevi etkilemiyor.
 
 ## Durum
@@ -178,6 +224,6 @@ Ani kalkış ve frenlerde taşınan yük sarsılmasın diye eklentiye ivme sın�
 - [x] Robot modeli ve diferansiyel sürüş
 - [x] Hastane koridoru dünyası ve tek launch dosyası
 - [x] Ok tuşlarıyla sürüş
-- [ ] Sensörler: LiDAR, kamera, IMU, bumper
-- [ ] Sensör tabanlı davranış düğümü ("kibar koridor sürüşü")
-- [ ] Rapor ve sunum
+- [x] Sensörler: LiDAR, kamera, IMU, bumper
+- [x] Sensör tabanlı davranış düğümü ("kibar koridor sürüşü")
+- [x] Rapor ve sunum
