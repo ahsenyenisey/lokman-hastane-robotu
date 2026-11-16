@@ -5,8 +5,9 @@ Kullanım:  ros2 run lokman_behavior kibar_surus
            (simülasyon açıkken; ok_tuslari düğümü KAPALI olmalı, ikisi aynı
             anda /cmd_vel'e yazarsa robot iki komut arasında kalır)
 
-Yazarlar:  İsa Şebib   – LiDAR kuralları (SEYİR / YAVAŞLA / KAÇIN), IMU yük koruma
-           Hüseyin Atay – Bumper refleksi (GERİ ÇEKİL)
+Yazarlar:  İsa Şebib, Ahsen Yenisey – LiDAR kuralları (SEYİR / YAVAŞLA / KAÇIN)
+           İsa Şebib                – IMU yük koruma
+           Hüseyin Atay             – Bumper refleksi (GERİ ÇEKİL)
 
 GİRDİLER (abonelikler)
   /scan    sensor_msgs/msg/LaserScan   LiDAR: 240 ışın, -120° … +120°
